@@ -1,1 +1,4 @@
-# senior_project_Face_Recognition
+# Face Recognition
+  *Bashir*
+  *Shofi*
+  *Ucha*
