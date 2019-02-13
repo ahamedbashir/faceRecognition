@@ -5,9 +5,6 @@ import imutils
 import face_recognition
 import pickle
 
-data = pickle.loads(open("encodings.pickle", "rb").read())
-name = "unknown"
-
 vs = VideoStream(0).start()
 time.sleep(1.0)
 

@@ -1,4 +1,3 @@
-from imutils.video import VideoStream
 import cv2
 import imutils
 import tkinter as tk
@@ -6,7 +5,7 @@ from PIL import Image, ImageTk
 import face_recognition
 import pickle
 
-vs = VideoStream(src=0).start()
+cap = cv2.VideoCapture(0, cv2.CAP_V4L)
 data = pickle.loads(open("encodings.pickle", "rb").read())
 detector = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
 
@@ -48,7 +47,7 @@ def train_action():
 # Repetitive functions
 def display():
     if display_flag:
-        frame = vs.read()
+        ret, frame = cap.read()
         frame = imutils.resize(frame, width=400)
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         frame = Image.fromarray(frame)
@@ -59,7 +58,7 @@ def display():
 
 def recognize():
     if recognize_flag:
-        frame = vs.read()
+        ret, frame = cap.read()
         frame = imutils.resize(frame, width=400)
         rects = face_recognition.face_locations(frame, model="hog")
         encodings = face_recognition.face_encodings(frame, rects)
@@ -88,7 +87,7 @@ def recognize():
 
 def train():
     if train_flag:
-        frame = vs.read()
+        ret, frame = cap.read()
         frame = imutils.resize(frame, width=400)
         rects = detector.detectMultiScale(cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY), scaleFactor=1.1, minNeighbors=5, minSize=(30,30))
         for(x, y, w, h) in rects:
@@ -115,4 +114,4 @@ top_container.pack(expand=1, fill=tk.BOTH)
 bottom_container.pack(fill=tk.X)
 display_action()
 root.mainloop()
-vs.stop()
+cap.release()
