@@ -1,5 +1,5 @@
 # Face Recognition
-> A team project built for Senior Project I II by  
+> A team project built for Senior Project I & II by  
 - Bashir
 - Shofi
 - Ucha  
