@@ -25,10 +25,11 @@ for (count, ip) in enumerate(imagepaths):
     rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
     box = face_recognition.face_locations(rgb, model=args.model)
-    encoding = face_recognition.face_encodings(rgb, box)
+    encodings = face_recognition.face_encodings(rgb, box)
 
-    known_encodings.append(encoding)
-    known_names.append(name)
+    for encoding in encodings:
+        known_encodings.append(encoding)
+        known_names.append(name)
 
 print("writing to the disk")
 data = {"names": known_names, "encodings": known_encodings}
