@@ -7,6 +7,7 @@ import pickle
 
 cap = cv2.VideoCapture(0, cv2.CAP_V4L)
 time.sleep(1.0)
+data = pickle.loads(open("encodings.pickle", "rb").read())
 
 while True:
     ret, frame = cap.read()
