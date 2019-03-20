@@ -5,11 +5,11 @@ import imutils
 import face_recognition
 import pickle
 
-vs = VideoStream(0).start()
+cap = cv2.VideoCapture(0, cv2.CAP_V4L)
 time.sleep(1.0)
 
 while True:
-    frame = vs.read()
+    ret, frame = cap.read()
     frame = imutils.resize(frame, width=400)
     rects = face_recognition.face_locations(frame, model="hog")
     encodings = face_recognition.face_encodings(frame, rects)
@@ -39,4 +39,4 @@ while True:
     
     
 cv2.destroyAllWindows()
-vs.stop()
+cap.release()

@@ -9,7 +9,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument("-d", "--dataset", required=True,
                 help="Path to dataset")
 ap.add_argument("-m", "--model", required=True,
-                help="Model to locate faces")
+                help="Model to find faces")
 ap.add_argument("-e", "--encodings", required=True,
                 help="Data file to write to disk")
 args = ap.parse_args()
@@ -24,12 +24,11 @@ for (count, ip) in enumerate(imagepaths):
     image = cv2.imread(ip)
     rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-    boxes = face_recognition.face_locations(rgb, model=args.model)
-    encodings = face_recognition.face_encodings(rgb, boxes)
+    box = face_recognition.face_locations(rgb, model=args.model)
+    encoding = face_recognition.face_encodings(rgb, box)
 
-    for encoding in encodings:
-        known_encodings.append(encoding)
-        known_names.append(name)
+    known_encodings.append(encoding)
+    known_names.append(name)
 
 print("writing to the disk")
 data = {"names": known_names, "encodings": known_encodings}

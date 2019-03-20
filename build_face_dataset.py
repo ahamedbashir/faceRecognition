@@ -8,20 +8,19 @@ import os
 ap = argparse.ArgumentParser()
 ap.add_argument("-c", "--cascade", required=True, help = "path to where the face cascade resides")
 ap.add_argument("-o", "--output", required=True, help="path to output directory")
-args = vars(ap.parse_args())
+args = ap.parse_args()
 
-detector = cv2.CascadeClassifier(args["cascade"])
+detector = cv2.CascadeClassifier(args.cascade)
 
 print("[INFO] starting video stream...")
-vs = VideoStream(src=0).start()
+cap = cv2.VideoCapture(0, cv2.CAP_V4L)
 time.sleep(1.0)
 total = 0
 
 while True:
-    frame = vs.read()
-    orig = frame.copy()
+    ret, frame = cap.read()
+    orig = frame
     frame = imutils.resize(frame, width=400)
-
     rects = detector.detectMultiScale(
         cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY), scaleFactor=1.1,
         minNeighbors=5, minSize=(30,30))
@@ -42,4 +41,4 @@ while True:
 print("[INFO] {} face images stored".format(total))
 print("[INFO] cleaning up...")
 cv2.destroyAllWindows()
-vs.stop()
+cap.release()
