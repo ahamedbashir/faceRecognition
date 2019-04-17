@@ -23,7 +23,7 @@ while True:
             for i in indexes:
                 name = data["names"][i]
                 counts[name] = counts.get(name, 0) + 1
-            name = max(counts, key=counts.get)
+            name = (max(counts, key=counts.get),'unknown')[counts[max(counts)] < 15]
             names.append(name)
 
     for ((top, right, bottom, left), name) in zip(rects, names):
