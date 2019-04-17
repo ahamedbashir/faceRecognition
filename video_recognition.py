@@ -23,7 +23,7 @@ while True:
             for i in indexes:
                 name = data["names"][i]
                 counts[name] = counts.get(name, 0) + 1
-            name = (max(counts, key=counts.get),'unknown')[counts[max(counts)] < 15]
+            name = (max(counts, key=counts.get),"unknown")[counts[max(counts, key=counts.get)] < data["names"].count(max(counts, key=counts.get))*0.7]
             names.append(name)
 
     for ((top, right, bottom, left), name) in zip(rects, names):
@@ -36,8 +36,6 @@ while True:
     key = cv2.waitKey(1) & 0xFF
     if key == ord("q"):
         break
-
-    
     
 cv2.destroyAllWindows()
 cap.release()
