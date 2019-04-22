@@ -5,12 +5,17 @@ from PIL import Image, ImageTk
 import face_recognition
 import pickle
 
+#
+import captureFace
+import trainFace
+
 cap = cv2.VideoCapture(0, cv2.CAP_V4L)
 data = pickle.loads(open("encodings.pickle", "rb").read())
 detector = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
 
 display_flag=False
 recognize_flag=False
+capture_flag = False
 train_flag=False
 
 # Actions
@@ -43,6 +48,8 @@ def train_action():
     if not train_flag:
         train_flag = True
         train()
+        
+        
         
 # Repetitive functions
 def display():
@@ -98,6 +105,7 @@ def train():
         top_container.itk  = frame
         top_container.configure(image=frame)
         top_container.after(10, train)
+        trainFace.encodeFace()
     
 # Main Function
 root = tk.Tk()
@@ -106,9 +114,11 @@ top_container = tk.Label(root, bg="grey")
 bottom_container = tk.Label(root, bg="black")
 button_stream = tk.Button(bottom_container, text="Stream", command=display_action)
 button_recognize = tk.Button(bottom_container, text="Recognize", command=recognize_action)
+button_captureFace = tk.Button(bottom_container, text="Capture Face", command = captureFace.createDataSet)
 button_train = tk.Button(bottom_container, text="Train", command=train_action)
 button_stream.pack(side="left", padx=10)
 button_recognize.pack(side="left", padx=10)
+button_captureFace.pack(side="left", padx=10)
 button_train.pack(side="left", padx=10)
 top_container.pack(expand=1, fill=tk.BOTH)
 bottom_container.pack(fill=tk.X)
