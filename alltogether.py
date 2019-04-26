@@ -1,12 +1,14 @@
 import cv2
 import imutils
-import tkinter as tk
+from tkinter import *
 from PIL import Image, ImageTk
 import face_recognition
 import pickle
+import os
+import time
+from imutils.video import VideoStream
 
-#
-import captureFace
+# train module
 import trainFace
 
 cap = cv2.VideoCapture(0, cv2.CAP_V4L)
@@ -19,37 +21,51 @@ capture_flag = False
 train_flag=False
 
 # Actions
-def display_action():
+def displayAction():
     global display_flag
     global recognize_flag
     global train_flag
+    global capture_flag
+    capture_flag = False
     recognize_flag = False
     train_flag = False
     if not display_flag:
         display_flag = True
         display()
 
-def recognize_action():
+def recognizeAction():
     global display_flag
     global recognize_flag
     global train_flag
+    global capture_flag
+    capture_flag = False
     display_flag = False
     train_flag = False
     if not recognize_flag:
         recognize_flag = True
         recognize()
         
-def train_action():
+def trainAction():
     global display_flag
     global recognize_flag
     global train_flag
+    global capture_flag
+    capture_flag = False
     display_flag = False
     recognize_flag = False
     if not train_flag:
         train_flag = True
         train()
         
-        
+def captureAction():
+        global display_flag
+        global recognize_flag
+        global train_flag
+        display_flag = False
+        recognize_flag = False
+        train_flag = False
+        if entry.get():
+                capture()
         
 # Repetitive functions
 def display():
@@ -92,6 +108,39 @@ def recognize():
         top_container.configure(image=frame)
         top_container.after(10, recognize)
 
+def capture() :
+        name = entry.get()
+        print(name)
+        pathDir = "dataset/"+name
+        cascade ="haarcascade_frontalface_default.xml"
+
+        detector = cv2.CascadeClassifier(cascade)
+    
+        if not os.path.exists(pathDir):
+                os.mkdir(pathDir)
+        # vs = VideoStream(src=0).start()
+        time.sleep(1.0)
+        total = len(next(os.walk(pathDir))[2])
+        print(total)
+        ret, frame = cap.read()
+        orig = frame.copy()
+
+        rects = detector.detectMultiScale(
+            cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY), scaleFactor=1.1,
+            minNeighbors=5, minSize=(30,30))
+
+        for (x, y, w, h) in rects:
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+    
+        key = cv2.waitKey(1) & 0xFF
+        
+        total+= 1
+        p = os.path.sep.join([pathDir, "{}.png".format(str(total).zfill(5))])
+        print(p)
+        cv2.imwrite(p, orig)
+        
+        print("[INFO] {} face images stored".format(total))
+
 def train():
     if train_flag:
         ret, frame = cap.read()
@@ -108,20 +157,30 @@ def train():
         trainFace.encodeFace()
     
 # Main Function
-root = tk.Tk()
+root = Tk()
+root.title("Face Recognition")
 root.attributes("-type","dialog")
-top_container = tk.Label(root, bg="grey")
-bottom_container = tk.Label(root, bg="black")
-button_stream = tk.Button(bottom_container, text="Stream", command=display_action)
-button_recognize = tk.Button(bottom_container, text="Recognize", command=recognize_action)
-button_captureFace = tk.Button(bottom_container, text="Capture Face", command = captureFace.createDataSet)
-button_train = tk.Button(bottom_container, text="Train", command=train_action)
-button_stream.pack(side="left", padx=10)
-button_recognize.pack(side="left", padx=10)
-button_captureFace.pack(side="left", padx=10)
-button_train.pack(side="left", padx=10)
-top_container.pack(expand=1, fill=tk.BOTH)
-bottom_container.pack(fill=tk.X)
-display_action()
+top_container = Label(root, text='Face Recognition', bg="grey")
+bottom_container = Label(root, bg="black")
+text_container = Label(root,bg="black")
+button_stream = Button(bottom_container, text="Stream", command=displayAction)
+button_recognize = Button(bottom_container, text="Recognize", command=recognizeAction)
+button_captureFace = Button(bottom_container, text="Capture", command = captureAction)
+button_train = Button(bottom_container, text="Train", command=trainAction)
+
+entry = Entry(root)
+button_stream.pack(side="left")
+button_recognize.pack(side="left")
+button_captureFace.pack(side="left")
+
+Label(text_container, text="Name :").pack(side="left")
+entry = Entry(text_container, width=30)
+entry.pack(side="left")
+
+button_train.pack(side="left")
+top_container.pack(expand=1, fill=BOTH)
+bottom_container.pack(fill=X)
+text_container.pack(fill=X)
+displayAction()
 root.mainloop()
 cap.release()
