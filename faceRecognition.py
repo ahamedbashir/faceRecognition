@@ -97,7 +97,6 @@ def recognize():
 def capture() :
         if entry.get():
                 name = entry.get()
-                print(name)
                 pathDir = "dataset/"+name
                 cascade ="haarcascade_frontalface_default.xml"
 
@@ -108,7 +107,6 @@ def capture() :
 
                 time.sleep(1.0)
                 total = len(next(os.walk(pathDir))[2])
-                print(total)
                 ret, frame = cap.read()
                 orig = frame.copy()
 
