@@ -32,7 +32,7 @@ while True:
     key = cv2.waitKey(1) & 0xFF
     
     if key == ord("k"):
-        p = os.path.sep.join([args["output"], "{}.png".format(str(total).zfill(5))])
+        p = os.path.sep.join([args.output, "{}.png".format(str(total).zfill(5))])
         cv2.imwrite(p, orig)
         total += 1 
     elif key == ord("q"):

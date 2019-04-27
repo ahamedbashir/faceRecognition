@@ -72,7 +72,10 @@ def recognize():
                 for i in indexes:
                     name = data["names"][i]
                     counts[name] = counts.get(name, 0) + 1
-                name = max(counts, key=counts.get)
+                name = (max(counts, key=counts.get),"unknown")[counts[max(counts, key=counts.get)] < data["names"].count(max(counts, key=counts.get))*0.7]
+                names.append(name)
+            else:
+                name = "unknown"
                 names.append(name)
         for ((top, right, bottom, left), name) in zip(rects, names):
             cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)
