@@ -1,3 +1,5 @@
+# faceRecognition.py
+
 import cv2
 import imutils
 from tkinter import *
@@ -7,14 +9,12 @@ import pickle
 import os
 import time
 from imutils.video import VideoStream
-
 # train module
 import trainFace
 
 cap = cv2.VideoCapture(0, cv2.CAP_V4L)
 data = pickle.loads(open("encodings.pickle", "rb").read())
 detector = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
-
 display_flag=False
 recognize_flag=False
 train_flag=False
@@ -52,6 +52,7 @@ def trainAction():
     if not train_flag:
         train_flag = True
         train()
+        recognizeAction()
 
 # Repetitive functions
 def display():

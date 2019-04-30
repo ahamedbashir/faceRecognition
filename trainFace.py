@@ -1,3 +1,5 @@
+# trainFace.py
+
 from imutils import paths
 import argparse
 import os
@@ -7,13 +9,6 @@ import pickle
 
 def encodeFace():
         ap = argparse.ArgumentParser()
-        # ap.add_argument("-d", "--dataset", required=True,
-        #                 help="Path to dataset")
-        # ap.add_argument("-m", "--model", required=True,
-        #                 help="Model to locate faces")
-        # ap.add_argument("-e", "--encodings", required=True,
-        #                 help="Data file to write to disk")
-
         ap.add_argument("-d", "--dataset", default="dataset",
                         help="Path to dataset")
         ap.add_argument("-m", "--model", default="cnn",
@@ -36,9 +31,9 @@ def encodeFace():
                 boxes = face_recognition.face_locations(rgb, model=args.model)
                 encodings = face_recognition.face_encodings(rgb, boxes)
 
-        for encoding in encodings:
-                known_encodings.append(encoding)
-                known_names.append(name)
+                for encoding in encodings:
+                        known_encodings.append(encoding)
+                        known_names.append(name)
 
         print("writing to the disk")
         data = {"names": known_names, "encodings": known_encodings}
