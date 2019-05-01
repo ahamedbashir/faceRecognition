@@ -1,9 +1,12 @@
 import cv2
 import imutils
+from imutils import paths
 import tkinter as tk
 from PIL import Image, ImageTk
 import face_recognition
 import pickle
+from tkinter import Entry
+import os
 
 cap = cv2.VideoCapture(0, cv2.CAP_V4L)
 data = pickle.loads(open("encodings.pickle", "rb").read())
@@ -11,15 +14,16 @@ detector = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
 
 display_flag=False
 recognize_flag=False
-train_flag=False
+new_face_flag=False
 
 # Actions
 def display_action():
     global display_flag
     global recognize_flag
-    global train_flag
+    global new_face_flag
     recognize_flag = False
-    train_flag = False
+    new_face_flag = False
+    bottom_container.pack_forget()
     if not display_flag:
         display_flag = True
         display()
@@ -27,22 +31,24 @@ def display_action():
 def recognize_action():
     global display_flag
     global recognize_flag
-    global train_flag
+    global new_face_flag
     display_flag = False
-    train_flag = False
+    new_face_flag = False
+    bottom_container.pack_forget()
     if not recognize_flag:
         recognize_flag = True
         recognize()
         
-def train_action():
+def new_face_action():
     global display_flag
     global recognize_flag
-    global train_flag
+    global new_face_flag
     display_flag = False
     recognize_flag = False
-    if not train_flag:
-        train_flag = True
-        train()
+    bottom_container.pack(fill=tk.X)
+    if not new_face_flag:
+        new_face_flag = True
+        new_face()
         
 # Repetitive functions
 def display():
@@ -88,8 +94,8 @@ def recognize():
         top_container.configure(image=frame)
         top_container.after(10, recognize)
 
-def train():
-    if train_flag:
+def new_face():
+    if new_face_flag:
         ret, frame = cap.read()
         frame = imutils.resize(frame, width=400)
         rects = detector.detectMultiScale(cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY), scaleFactor=1.1, minNeighbors=5, minSize=(30,30))
@@ -100,21 +106,77 @@ def train():
         frame = ImageTk.PhotoImage(image=frame)
         top_container.itk  = frame
         top_container.configure(image=frame)
-        top_container.after(10, train)
+        top_container.after(10, new_face)
+
+#Other functions
+def capture():
+    if new_face_flag:
+        if text_entry.get()=="":
+            print("Please type your name in the text field")
+        else:
+            ret, frame = cap.read()
+            if not os.path.isdir(os.path.sep.join(['dataset',text_entry.get()])):
+                os.mkdir(os.path.sep.join(['dataset',text_entry.get()]))
+            directory = os.path.sep.join(['dataset',text_entry.get()])
+            total = len(os.listdir(directory))
+            img_name = os.path.sep.join([directory,"{}.png".format(str(total).zfill(5))])
+            if os.path.isfile(img_name):
+                os.chdir(directory)
+                l = os.listdir('.')
+                l.sort()
+                count = 0
+                for i in l:
+                    os.rename(i, str(count).zfill(5)+".png")
+                    count+=1
+                os.chdir('../..')
+            cv2.imwrite(img_name,frame)
+
+
+def train():
+    if new_face_flag:
+        imagepaths = list(paths.list_images('dataset/'))
+        known_names = []
+        known_encodings = []
+        for (count, ip) in enumerate(imagepaths):
+            print("encoding images {} / {}".format(count + 1, len(imagepaths)))
+            name = ip.split(os.path.sep)[-2]
+            image = cv2.imread(ip)
+            rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+            box = face_recognition.face_locations(rgb, model="hog")
+            encodings = face_recognition.face_encodings(rgb, box)
+
+            for encoding in encodings:
+                known_encodings.append(encoding)
+                known_names.append(name)
+
+        print("writing to the disk")
+        data = {"names": known_names, "encodings": known_encodings}
+        f = open("encodings.pickle", "wb")
+        f.write(pickle.dumps(data))
+        f.close()
+        print("finished!")
     
 # Main Function
 root = tk.Tk()
 root.attributes("-type","dialog")
 top_container = tk.Label(root, bg="grey")
+middle_container = tk.Label(root, bg="black")
 bottom_container = tk.Label(root, bg="black")
-button_stream = tk.Button(bottom_container, text="Stream", command=display_action)
-button_recognize = tk.Button(bottom_container, text="Recognize", command=recognize_action)
-button_train = tk.Button(bottom_container, text="Train", command=train_action)
-button_stream.pack(side="left", padx=10)
-button_recognize.pack(side="left", padx=10)
-button_train.pack(side="left", padx=10)
+button_stream = tk.Button(middle_container, text="Stream", command=display_action)
+button_recognize = tk.Button(middle_container, text="Recognize", command=recognize_action)
+button_new_face = tk.Button(middle_container, text="New Face", command=new_face_action)
+text_entry = Entry(bottom_container, text="")
+button_capture = tk.Button(bottom_container, text="Capture", command=capture)
+button_train = tk.Button(bottom_container, text="Train", command=train)
+button_stream.pack(side="left", padx=(0,20))
+button_recognize.pack(side="left", padx=(0,20))
+button_new_face.pack(side="left", padx=(0,20))
+text_entry.pack(side="left", padx=(0,20), pady=(10,0))
+button_capture.pack(side="left", padx=(0,20), pady=(10,0))
+button_train.pack(side="left", padx=(0,20), pady=(10,0))
 top_container.pack(expand=1, fill=tk.BOTH)
-bottom_container.pack(fill=tk.X)
+middle_container.pack(fill=tk.X)
 display_action()
 root.mainloop()
 cap.release()
