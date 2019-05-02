@@ -117,10 +117,10 @@ def capture():
         else:
             ret, frame = cap.read()
             directory = os.path.sep.join(['dataset',text_entry.get()])
-            total = len(os.listdir(directory))
-            img_name = os.path.sep.join([directory,"{}.png".format(str(total).zfill(5))])
             if not os.path.isdir(directory):
                 os.mkdir(directory)
+            total = len(os.listdir(directory))
+            img_name = os.path.sep.join([directory,"{}.png".format(str(total).zfill(5))])
             if os.path.isfile(img_name):
                 os.chdir(directory)
                 l = list(paths.list_images('.'))
