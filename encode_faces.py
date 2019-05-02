@@ -1,3 +1,4 @@
+#encode_faces.py
 from imutils import paths
 import argparse
 import os

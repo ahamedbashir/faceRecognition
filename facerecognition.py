@@ -1,3 +1,4 @@
+#facerecognition.py
 import cv2
 import imutils
 from imutils import paths
@@ -115,14 +116,14 @@ def capture():
             print("Please type your name in the text field")
         else:
             ret, frame = cap.read()
-            if not os.path.isdir(os.path.sep.join(['dataset',text_entry.get()])):
-                os.mkdir(os.path.sep.join(['dataset',text_entry.get()]))
             directory = os.path.sep.join(['dataset',text_entry.get()])
             total = len(os.listdir(directory))
             img_name = os.path.sep.join([directory,"{}.png".format(str(total).zfill(5))])
+            if not os.path.isdir(directory):
+                os.mkdir(directory)
             if os.path.isfile(img_name):
                 os.chdir(directory)
-                l = os.listdir('.')
+                l = list(paths.list_images('.'))
                 l.sort()
                 count = 0
                 for i in l:
