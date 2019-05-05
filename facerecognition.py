@@ -8,6 +8,8 @@ import face_recognition
 import pickle
 from tkinter import Entry
 import os
+import threading
+import time
 
 cap = cv2.VideoCapture(0, cv2.CAP_V4L)
 data = pickle.loads(open("encodings.pickle", "rb").read())
@@ -33,11 +35,13 @@ def recognize_action():
     global display_flag
     global recognize_flag
     global new_face_flag
+    global data
     display_flag = False
     new_face_flag = False
     bottom_container.pack_forget()
     if not recognize_flag:
         recognize_flag = True
+        data = pickle.loads(open("encodings.pickle", "rb").read())
         recognize()
         
 def new_face_action():
@@ -110,28 +114,46 @@ def new_face():
         top_container.after(10, new_face)
 
 #Other functions
-def capture():
+def auto_cap():
     if new_face_flag:
         if text_entry.get()=="":
             print("Please type your name in the text field")
         else:
-            ret, frame = cap.read()
             directory = os.path.sep.join(['dataset',text_entry.get()])
             if not os.path.isdir(directory):
                 os.mkdir(directory)
-            total = len(os.listdir(directory))
-            img_name = os.path.sep.join([directory,"{}.png".format(str(total).zfill(5))])
-            if os.path.isfile(img_name):
-                os.chdir(directory)
-                l = list(paths.list_images('.'))
-                l.sort()
-                count = 0
-                for i in l:
-                    os.rename(i, str(count).zfill(5)+".png")
-                    count+=1
-                os.chdir('../..')
-            cv2.imwrite(img_name,frame)
-
+            total = len(list(paths.list_images(directory)))
+            if total >= 50:
+                print("There is plenty of images for you in the database")
+                return
+            os.chdir(directory)
+            l = list(paths.list_images('.'))
+            l.sort()
+            count = 0
+            for i in l:
+                os.rename(i, str(count).zfill(5)+".png")
+                count+=1
+            os.chdir('../..')
+            print("Ready!")
+            time.sleep(1)
+            print("Set!")
+            time.sleep(1)
+            print("Action!")
+            time.sleep(1)
+            while total <= 50:
+                ret, frame = cap.read()
+                frame = imutils.resize(frame, width=400)
+                rects = detector.detectMultiScale(cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY), scaleFactor=1.1, minNeighbors=5, minSize=(30,30))
+                if len(rects)==1:
+                    cv2.imwrite(os.path.sep.join([directory, "{}.png".format(str(total).zfill(5))]), frame)
+                    print("Imaging progress: {}/{} images".format(total,50))
+                    total+=1
+                    time.sleep(0.3)
+            print("Finished!")
+                
+            
+def start_thread():
+    threading.Thread(target=auto_cap).start()
 
 def train():
     if new_face_flag:
@@ -168,7 +190,7 @@ button_stream = tk.Button(middle_container, text="Stream", command=display_actio
 button_recognize = tk.Button(middle_container, text="Recognize", command=recognize_action)
 button_new_face = tk.Button(middle_container, text="New Face", command=new_face_action)
 text_entry = Entry(bottom_container, text="")
-button_capture = tk.Button(bottom_container, text="Capture", command=capture)
+button_capture = tk.Button(bottom_container, text="Capture", command=start_thread)
 button_train = tk.Button(bottom_container, text="Train", command=train)
 button_stream.pack(side="left", padx=(0,20))
 button_recognize.pack(side="left", padx=(0,20))
