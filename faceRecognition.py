@@ -119,6 +119,8 @@ def auto_cap():
         if text_entry.get()=="":
             print("Please type your name in the text field")
         else:
+            if not os.path.isdir('dataset'):
+                os.mkdir('dataset');
             directory = os.path.sep.join(['dataset',text_entry.get()])
             if not os.path.isdir(directory):
                 os.mkdir(directory)
