@@ -1,59 +1,60 @@
-# faceRecognition.py
-
+#facerecognition.py
 import cv2
 import imutils
-from tkinter import *
+from imutils import paths
+import tkinter as tk
 from PIL import Image, ImageTk
 import face_recognition
 import pickle
+from tkinter import Entry
 import os
+import threading
 import time
-from imutils.video import VideoStream
-# train module
-import trainFace
 
 cap = cv2.VideoCapture(0, cv2.CAP_V4L)
 data = pickle.loads(open("encodings.pickle", "rb").read())
 detector = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
+
 display_flag=False
 recognize_flag=False
-train_flag=False
+new_face_flag=False
 
 # Actions
-def displayAction():
+def display_action():
     global display_flag
     global recognize_flag
-    global train_flag
-
+    global new_face_flag
     recognize_flag = False
-    train_flag = False
+    new_face_flag = False
+    bottom_container.pack_forget()
     if not display_flag:
         display_flag = True
         display()
 
-def recognizeAction():
+def recognize_action():
     global display_flag
     global recognize_flag
-    global train_flag
-  
+    global new_face_flag
+    global data
     display_flag = False
-    train_flag = False
+    new_face_flag = False
+    bottom_container.pack_forget()
     if not recognize_flag:
         recognize_flag = True
+        data = pickle.loads(open("encodings.pickle", "rb").read())
         recognize()
         
-def trainAction():
+def new_face_action():
     global display_flag
     global recognize_flag
-    global train_flag
-
+    global new_face_flag
     display_flag = False
     recognize_flag = False
-    if not train_flag:
-        train_flag = True
-        train()
-        recognizeAction()
-
+    bottom_container.pack(fill=tk.X)
+    if not new_face_flag:
+        new_face_flag = True
+        new_face()
+        
 # Repetitive functions
 def display():
     if display_flag:
@@ -82,7 +83,10 @@ def recognize():
                 for i in indexes:
                     name = data["names"][i]
                     counts[name] = counts.get(name, 0) + 1
-                name = max(counts, key=counts.get)
+                name = (max(counts, key=counts.get),"unknown")[counts[max(counts, key=counts.get)] < data["names"].count(max(counts, key=counts.get))*0.7]
+                names.append(name)
+            else:
+                name = "unknown"
                 names.append(name)
         for ((top, right, bottom, left), name) in zip(rects, names):
             cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)
@@ -95,38 +99,8 @@ def recognize():
         top_container.configure(image=frame)
         top_container.after(10, recognize)
 
-def capture() :
-        if entry.get():
-                name = entry.get()
-                pathDir = "dataset/"+name
-                cascade ="haarcascade_frontalface_default.xml"
-
-                detector = cv2.CascadeClassifier(cascade)
-    
-                if not os.path.exists(pathDir):
-                    os.mkdir(pathDir)
-
-                time.sleep(1.0)
-                total = len(next(os.walk(pathDir))[2])
-                ret, frame = cap.read()
-                orig = frame.copy()
-
-                rects = detector.detectMultiScale(cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY), scaleFactor=1.1, minNeighbors=5, minSize=(30,30))
-
-                for (x, y, w, h) in rects:
-                        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-    
-                key = cv2.waitKey(1) & 0xFF
-        
-                total+= 1
-                p = os.path.sep.join([pathDir, "{}.png".format(str(total).zfill(5))])
-                print(p)
-                cv2.imwrite(p, orig)
-        
-                print("[INFO] {} face images stored".format(total))
-
-def train():
-    if train_flag:
+def new_face():
+    if new_face_flag:
         ret, frame = cap.read()
         frame = imutils.resize(frame, width=400)
         rects = detector.detectMultiScale(cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY), scaleFactor=1.1, minNeighbors=5, minSize=(30,30))
@@ -137,34 +111,96 @@ def train():
         frame = ImageTk.PhotoImage(image=frame)
         top_container.itk  = frame
         top_container.configure(image=frame)
-        top_container.after(10, train)
-        trainFace.encodeFace()
+        top_container.after(10, new_face)
+
+#Other functions
+def auto_cap():
+    if new_face_flag:
+        if text_entry.get()=="":
+            print("Please type your name in the text field")
+        else:
+            directory = os.path.sep.join(['dataset',text_entry.get()])
+            if not os.path.isdir(directory):
+                os.mkdir(directory)
+            total = len(list(paths.list_images(directory)))
+            if total >= 50:
+                print("There is plenty of images for you in the database")
+                return
+            os.chdir(directory)
+            l = list(paths.list_images('.'))
+            l.sort()
+            count = 0
+            for i in l:
+                os.rename(i, str(count).zfill(5)+".png")
+                count+=1
+            os.chdir('../..')
+            print("Ready!")
+            time.sleep(1)
+            print("Set!")
+            time.sleep(1)
+            print("Action!")
+            time.sleep(1)
+            while total <= 50:
+                ret, frame = cap.read()
+                frame = imutils.resize(frame, width=400)
+                rects = detector.detectMultiScale(cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY), scaleFactor=1.1, minNeighbors=5, minSize=(30,30))
+                if len(rects)==1:
+                    cv2.imwrite(os.path.sep.join([directory, "{}.png".format(str(total).zfill(5))]), frame)
+                    print("Imaging progress: {}/{} images".format(total,50))
+                    total+=1
+                time.sleep(0.5)
+            print("Finished!")
+                
+            
+def start_thread():
+    threading.Thread(target=auto_cap).start()
+
+def train():
+    if new_face_flag:
+        imagepaths = list(paths.list_images('dataset/'))
+        known_names = []
+        known_encodings = []
+        for (count, ip) in enumerate(imagepaths):
+            print("encoding images {} / {}".format(count + 1, len(imagepaths)))
+            name = ip.split(os.path.sep)[-2]
+            image = cv2.imread(ip)
+            rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+            box = face_recognition.face_locations(rgb, model="hog")
+            encodings = face_recognition.face_encodings(rgb, box)
+
+            for encoding in encodings:
+                known_encodings.append(encoding)
+                known_names.append(name)
+
+        print("writing to the disk")
+        data = {"names": known_names, "encodings": known_encodings}
+        f = open("encodings.pickle", "wb")
+        f.write(pickle.dumps(data))
+        f.close()
+        print("finished!")
     
 # Main Function
-root = Tk()
+root = tk.Tk()
 root.title("Face Recognition")
 root.attributes("-type","dialog")
-top_container = Label(root, text='Face Recognition', bg="grey")
-bottom_container = Label(root, bg="black")
-text_container = Label(root,bg="black")
-button_stream = Button(bottom_container, text="Stream", command=displayAction)
-button_recognize = Button(bottom_container, text="Recognize", command=recognizeAction)
-button_captureFace = Button(bottom_container, text="Capture", command = capture)
-button_train = Button(bottom_container, text="Train", command=trainAction)
-
-entry = Entry(root)
-button_stream.pack(side="left")
-button_recognize.pack(side="left")
-button_captureFace.pack(side="left")
-
-Label(text_container, text="Name :").pack(side="left")
-entry = Entry(text_container, width=25)
-entry.pack(side="left")
-
-button_train.pack(side="left")
-top_container.pack(expand=1, fill=BOTH)
-bottom_container.pack(fill=X)
-text_container.pack(fill=X)
-displayAction()
+top_container = tk.Label(root, bg="grey")
+middle_container = tk.Label(root, bg="black")
+bottom_container = tk.Label(root, bg="black")
+button_stream = tk.Button(middle_container, text="Stream", command=display_action)
+button_recognize = tk.Button(middle_container, text="Recognize", command=recognize_action)
+button_new_face = tk.Button(middle_container, text="New Face", command=new_face_action)
+text_entry = Entry(bottom_container, text="")
+button_capture = tk.Button(bottom_container, text="Capture", command=start_thread)
+button_train = tk.Button(bottom_container, text="Train", command=train)
+button_stream.pack(side="left", padx=(0,20))
+button_recognize.pack(side="left", padx=(0,20))
+button_new_face.pack(side="left", padx=(0,20))
+text_entry.pack(side="left", padx=(0,20), pady=(10,0))
+button_capture.pack(side="left", padx=(0,20), pady=(10,0))
+button_train.pack(side="left", padx=(0,20), pady=(10,0))
+top_container.pack(expand=1, fill=tk.BOTH)
+middle_container.pack(fill=tk.X)
+display_action()
 root.mainloop()
 cap.release()
