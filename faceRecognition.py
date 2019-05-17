@@ -115,45 +115,48 @@ def new_face():
 
 #Other functions
 def auto_cap():
-    if new_face_flag:
-        if text_entry.get()=="":
-            print("Please type your name in the text field");
-        else:
-            if not os.path.isdir('dataset'):
-                os.mkdir('dataset');
-            directory = os.path.sep.join(['dataset',text_entry.get()]);
-            if not os.path.isdir(directory):
-                os.mkdir(directory);
-            total = len(list(paths.list_images(directory)));
-            # if total >= 50:
-            #     print("There is plenty of images for you in the database");
-            #     return;
-            os.chdir(directory);
-            l = list(paths.list_images('.'));
-            l.sort();
-            count = 0;
-            for i in l:
-                os.rename(i, str(count).zfill(5)+".png");
-                count+=1;
-            os.chdir('../..');
-            print("Ready!");
-            time.sleep(1);
-            print("Set!");
-            time.sleep(1);
-            print("Action!");
-            time.sleep(1);
-            total = total % 50; # to update face images
-            while total <= 50:
-                ret, frame = cap.read();
-                frame = imutils.resize(frame, width=400);
-                rects = detector.detectMultiScale(cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY), scaleFactor=1.1, minNeighbors=5, minSize=(30,30));
-                if len(rects)==1:
-                    cv2.imwrite(os.path.sep.join([directory, "{}.png".format(str(total).zfill(5))]), frame);
-                    print("Imaging progress: {}/{} images".format(total,50));
-                    total+=1;
-                time.sleep(0.5);
-            print("Finished!");
-                
+    try:
+        if new_face_flag:
+            if text_entry.get()=="":
+                print("Please type your name in the text field");
+            else:
+                if not os.path.isdir('dataset'):
+                    os.mkdir('dataset');
+                directory = os.path.sep.join(['dataset',text_entry.get()]);
+                if not os.path.isdir(directory):
+                    os.mkdir(directory);
+                total = len(list(paths.list_images(directory)));
+                # if total >= 50:
+                #     print("There is plenty of images for you in the database");
+                #     return;
+                os.chdir(directory);
+                l = list(paths.list_images('.'));
+                l.sort();
+                count = 0;
+                for i in l:
+                    os.rename(i, str(count).zfill(5)+".png");
+                    count+=1;
+                os.chdir('../..');
+                print("Ready!");
+                time.sleep(1);
+                print("Set!");
+                time.sleep(1);
+                print("Action!");
+                time.sleep(1);
+                total = total % 50; # to update face images
+                while total <= 50:
+                    ret, frame = cap.read();
+                    frame = imutils.resize(frame, width=400);
+                    rects = detector.detectMultiScale(cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY), scaleFactor=1.1, minNeighbors=5, minSize=(30,30));
+                    if len(rects)==1:
+                        cv2.imwrite(os.path.sep.join([directory, "{}.png".format(str(total).zfill(5))]), frame);
+                        print("Imaging progress: {}/{} images".format(total,50));
+                        total+=1;
+                    time.sleep(0.5);
+                print("Finished!");
+    except:
+        pass;
+                    
             
 def start_thread():
     threading.Thread(target=auto_cap).start();
