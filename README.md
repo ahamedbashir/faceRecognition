@@ -7,11 +7,13 @@
 ## Instructions: 
 
 ## RUN THE APP
+```
 ## python faceRecognition.py
+```
 #### To Build Dataset Manually:
 The following command will take images using system camera:  
 ```
-# python captureFace.py
+## python captureFace.py
 
 Or with custom argument
 
