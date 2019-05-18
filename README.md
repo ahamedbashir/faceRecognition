@@ -8,12 +8,14 @@
 
 ## RUN THE APP
 ```
-## python faceRecognition.py
+python faceRecognition.py
 ```
+
+
 #### To Build Dataset Manually:
 The following command will take images using system camera:  
 ```
-## python captureFace.py
+python captureFace.py
 
 Or with custom argument
 
@@ -23,7 +25,7 @@ Where '--output' is the argument to the path to which the newly taken images wil
 
 #### To Encode Images:
 ```
-# python trainFace.py
+python trainFace.py
 
 or with custom argument
 
