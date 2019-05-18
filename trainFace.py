@@ -11,7 +11,7 @@ def encodeFace():
         ap = argparse.ArgumentParser()
         ap.add_argument("-d", "--dataset", default="dataset",
                         help="Path to dataset")
-        ap.add_argument("-m", "--model", default="cnn",
+        ap.add_argument("-m", "--model", default="hog",
                         help="Model to locate faces")
         ap.add_argument("-e", "--encodings", default="encodings.pickle",
                         help="Data file to write to disk")

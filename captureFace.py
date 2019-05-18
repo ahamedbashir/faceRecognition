@@ -17,6 +17,8 @@ def createDataSet():
     ap.add_argument("-o", "--output", default = pathDir, help="path to output directory")
     args = ap.parse_args()
     detector = cv2.CascadeClassifier(args.cascade)
+    if not os.path.isdir('dataset'):
+        os.mkdir('dataset');
     if not os.path.exists(pathDir):
         os.mkdir(pathDir)
     vs = VideoStream(src=0).start()
