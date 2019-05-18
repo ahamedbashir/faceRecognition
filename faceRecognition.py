@@ -12,7 +12,15 @@ import threading;
 import time;
 
 cap = cv2.VideoCapture(0, cv2.CAP_V4L);
-data = pickle.loads(open("encodings.pickle", "rb").read());
+pickleFound = True;
+try:
+    data = pickle.loads(open("encodings.pickle", "rb").read());
+except (OSError, IOError) as e:
+    pickleFound = False
+    data = 3;
+    pickle.dump(data, open("encodings.pickle", "wb"));
+
+# data = pickle.loads(open("encodings.pickle", "rb").read());
 detector = cv2.CascadeClassifier("haarcascade_frontalface_default.xml");
 
 display_flag=False;
@@ -39,6 +47,13 @@ def faceRecognition():
             global recognize_flag;
             global new_face_flag;
             global data;
+            global pickleFound;
+            if not pickleFound:
+                    new_face_flag = True;
+                    print("Created New subscriptable object", end=" ");
+                    train();
+                    pickleFound = True;
+
             display_flag = False;
             new_face_flag = False;
             bottom_container.pack_forget();
@@ -148,6 +163,7 @@ def faceRecognition():
                         time.sleep(1);
                         total = total % 50; # to update face images
                         while total <= 50:
+                            time.sleep(0.5);
                             ret, frame = cap.read();
                             frame = imutils.resize(frame, width=400);
                             rects = detector.detectMultiScale(cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY), scaleFactor=1.1, minNeighbors=5, minSize=(30,30));
@@ -155,7 +171,7 @@ def faceRecognition():
                                 cv2.imwrite(os.path.sep.join([directory, "{}.png".format(str(total).zfill(5))]), frame);
                                 print("Imaging progress: {}/{} images".format(total,50));
                                 total+=1;
-                            time.sleep(0.5);
+                            # time.sleep(0.5);
                         print("Finished!");
             except:
                 pass;
